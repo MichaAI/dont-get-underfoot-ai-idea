@@ -5,6 +5,9 @@ import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
+import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.codeInsight.lookup.InsertHandler
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiFile
@@ -18,14 +21,13 @@ class FimCompletionContributor : CompletionContributor() {
             return
         }
 
-        val settings = FimSettingsService.instance.state
+        val settings = FimSettingsService.instance
         if (!settings.enabled) {
             return
         }
 
         val editor = parameters.editor
         val file = parameters.originalFile
-        val project = file.project
 
         if (isExcludedFile(file)) {
             return
@@ -48,7 +50,7 @@ class FimCompletionContributor : CompletionContributor() {
         val response = fimClient.complete(request)
 
         if (response.success && response.text.isNotBlank()) {
-            val lookupElement = createLookupElement(response.text, parameters)
+            val lookupElement = createLookupElement(response.text)
             resultSet.addElement(lookupElement)
         }
     }
@@ -67,11 +69,8 @@ class FimCompletionContributor : CompletionContributor() {
         val document = editor.document
         val caretOffset = editor.caretModel.offset
 
-        val prefixEnd = caretOffset
-        val suffixStart = caretOffset
-
         val prefixLines = mutableListOf<String>()
-        var prefixLine = document.getLineNumber(prefixEnd)
+        var prefixLine = document.getLineNumber(caretOffset)
         val startLine = maxOf(0, prefixLine - contextLines)
 
         for (line in startLine until prefixLine) {
@@ -80,18 +79,18 @@ class FimCompletionContributor : CompletionContributor() {
             prefixLines.add(document.text.substring(lineStart, lineEnd))
         }
 
-        if (prefixEnd > 0 && prefixEnd <= document.textLength) {
+        if (caretOffset > 0 && caretOffset <= document.textLength) {
             val lineStart = document.getLineStartOffset(prefixLine)
-            prefixLines.add(document.text.substring(lineStart, prefixEnd))
+            prefixLines.add(document.text.substring(lineStart, caretOffset))
         }
 
         val suffixLines = mutableListOf<String>()
-        var suffixLine = document.getLineNumber(suffixStart)
+        var suffixLine = document.getLineNumber(caretOffset)
         val endLine = minOf(document.lineCount - 1, suffixLine + contextLines)
 
-        if (suffixStart < document.textLength) {
+        if (caretOffset < document.textLength) {
             val lineEnd = document.getLineEndOffset(suffixLine)
-            suffixLines.add(document.text.substring(suffixStart, lineEnd))
+            suffixLines.add(document.text.substring(caretOffset, lineEnd))
         }
 
         for (line in (suffixLine + 1)..endLine) {
@@ -106,20 +105,14 @@ class FimCompletionContributor : CompletionContributor() {
         )
     }
 
-    private fun createLookupElement(text: String, parameters: CompletionParameters): com.intellij.codeInsight.lookup.LookupElement {
+    private fun createLookupElement(text: String): LookupElement {
         val trimmedText = text.trim()
-        
-        return object : com.intellij.codeInsight.lookup.LookupElementBuilder() {
-            override fun getLookupString(): String = trimmedText.take(50).replace("\n", " ")
-            
-            override fun getAllLookupStrings(): MutableSet<String> = mutableSetOf(trimmedText.take(50))
-            
-            override fun getObject(): Any = trimmedText
-        }.withInsertHandler { context, item ->
-            val insertedText = item.`object` as String
-            context.document.insertString(context.cursorOffset, insertedText)
-            context.editor.caretModel.moveToOffset(context.cursorOffset + insertedText.length)
-        }
+
+        return LookupElementBuilder.create(trimmedText)
+            .withInsertHandler(InsertHandler { context, item ->
+                val insertedText = item.lookupString
+                context.editor.caretModel.moveToOffset(context.tailOffset)
+            })
     }
 
     data class FimContext(

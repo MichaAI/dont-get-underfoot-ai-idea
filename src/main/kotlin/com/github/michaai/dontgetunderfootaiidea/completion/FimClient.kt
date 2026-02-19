@@ -25,7 +25,7 @@ class FimClient {
     )
 
     fun complete(request: FimRequest): FimResponse {
-        val settings = FimSettingsService.instance.state
+        val settings = FimSettingsService.instance
         val timeout = settings.timeoutSeconds * 1000
 
         return try {
@@ -67,9 +67,9 @@ class FimClient {
     }
 
     private fun buildFimJson(request: FimRequest): String {
-        val settings = FimSettingsService.instance.state
+        val settings = FimSettingsService.instance
         val fimPrompt = buildFimPrompt(request.prefix, request.suffix)
-        
+
         return """
         {
             "model": "${request.model}",

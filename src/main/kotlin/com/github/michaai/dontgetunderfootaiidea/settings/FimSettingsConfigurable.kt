@@ -2,6 +2,7 @@ package com.github.michaai.dontgetunderfootaiidea.settings
 
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
+import java.awt.Dimension
 import javax.swing.*
 
 class FimSettingsConfigurable : Configurable {
@@ -18,7 +19,7 @@ class FimSettingsConfigurable : Configurable {
     override fun getDisplayName(): String = "AI FIM Completion"
 
     override fun createComponent(): JComponent {
-        val settings = FimSettingsService.instance.state
+        val settings = FimSettingsService.instance
 
         panel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
@@ -95,7 +96,7 @@ class FimSettingsConfigurable : Configurable {
     }
 
     override fun isModified(): Boolean {
-        val settings = FimSettingsService.instance.state
+        val settings = FimSettingsService.instance
         return endpointField?.text != settings.endpoint ||
                 String(apiKeyField?.password ?: charArrayOf()) != settings.apiKey ||
                 modelField?.text != settings.model ||
@@ -107,7 +108,7 @@ class FimSettingsConfigurable : Configurable {
     }
 
     override fun apply() {
-        val settings = FimSettingsService.instance.state
+        val settings = FimSettingsService.instance
         settings.endpoint = endpointField?.text ?: settings.endpoint
         settings.apiKey = String(apiKeyField?.password ?: charArrayOf())
         settings.model = modelField?.text ?: settings.model
@@ -119,7 +120,7 @@ class FimSettingsConfigurable : Configurable {
     }
 
     override fun reset() {
-        val settings = FimSettingsService.instance.state
+        val settings = FimSettingsService.instance
         endpointField?.text = settings.endpoint
         apiKeyField?.text = settings.apiKey
         modelField?.text = settings.model
