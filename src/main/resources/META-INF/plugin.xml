@@ -1,15 +1,18 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.michaai.dontgetunderfootaiidea</id>
-    <name>dont-get-underfoot-ai-idea</name>
+    <name>AI FIM Completion</name>
     <vendor>michaai</vendor>
+    <description>AI-powered code completion using FIM (Fill-in-the-Middle) models</description>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.michaai.dontgetunderfootaiidea.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.michaai.dontgetunderfootaiidea.startup.MyProjectActivity" />
+        <completion.contributor language="any" implementationClass="com.github.michaai.dontgetunderfootaiidea.completion.FimCompletionContributor" order="first(last)"/>
+        <applicationConfigurable instance="com.github.michaai.dontgetunderfootaiidea.settings.FimSettingsConfigurable" id="FimSettings"/>
+        <applicationService serviceImplementation="com.github.michaai.dontgetunderfootaiidea.settings.FimSettingsService"/>
     </extensions>
 </idea-plugin>
