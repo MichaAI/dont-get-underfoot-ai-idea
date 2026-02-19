@@ -4,10 +4,7 @@ import com.github.michaai.dontgetunderfootaiidea.settings.FimSettingsService
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
-import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.codeInsight.lookup.InsertHandler
-import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiFile
@@ -56,7 +53,7 @@ class FimCompletionContributor : CompletionContributor() {
     }
 
     private fun shouldProcess(parameters: CompletionParameters): Boolean {
-        return parameters.completionType == CompletionType.EXPLICIT
+        return parameters.completionType.name == "EXPLICIT"
     }
 
     private fun isExcludedFile(file: PsiFile): Boolean {
@@ -105,15 +102,7 @@ class FimCompletionContributor : CompletionContributor() {
         )
     }
 
-    private fun createLookupElement(text: String): LookupElement {
-        val trimmedText = text.trim()
-
-        return LookupElementBuilder.create(trimmedText)
-            .withInsertHandler(InsertHandler { context, item ->
-                val insertedText = item.lookupString
-                context.editor.caretModel.moveToOffset(context.tailOffset)
-            })
-    }
+    private fun createLookupElement(text: String) = LookupElementBuilder.create(text.trim())
 
     data class FimContext(
         val prefix: String,
